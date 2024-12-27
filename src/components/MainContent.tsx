@@ -39,17 +39,6 @@ const MainContent: React.FC<MainContentProps> = ({
     }
   };
 
-  const handleImageFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files) {
-      const files = Array.from(event.target.files);
-      const Images = files.map((file) => ({
-        file,
-        url: URL.createObjectURL(file),
-      }));
-      setUploadedFiles((prev) => [...prev, ...Images]);
-    }
-  };
-
   const onModelAdd = (model: any) => {
     setUploadedFiles(prev => [...prev, model]);
   };
@@ -82,7 +71,6 @@ const MainContent: React.FC<MainContentProps> = ({
           currentStage={currentStage}
           handleFileUpload={handleFileUpload}
           uploadedFiles={uploadedFiles}
-          handleImageFileUpload={handleImageFileUpload}
           uploadedImageFiles={uploadedImageFiles}
           uploadedImage3Files={uploadedImage3Files}
           setUploadedImageFiles={setUploadedImageFiles}

@@ -904,7 +904,7 @@ const ContentArea: React.FC<ContentAreaProps> = ({
         return updatedStages;
       });
       setStage3Photo(selectedImage);
-    }  
+    }
   }, [selectedImage]);
 
   useEffect(() => {
@@ -1078,19 +1078,19 @@ const ContentArea: React.FC<ContentAreaProps> = ({
   }
   const [selectedFiles, setSelectedFiles] = useState<SelectedFiles>({});
 
-  const base64ToBlob = (base64: string) => {
+  // 修改 base64ToBlob 函數，添加錯誤處理和格式檢查
+  const base64ToBlob = async (base64: string) => {
     try {
-      const [metadata, data] = base64.split(",");
-      const mimeType = metadata.match(/data:([^;]+);base64/)?.[1] || 'image/png';
-      const binary = atob(data);
-      const array = new Uint8Array(binary.length);
-      for (let i = 0; i < binary.length; i++) {
-        array[i] = binary.charCodeAt(i);
-      }
-      return new Blob([array], { type: mimeType });
+      // 確保 base64 字串格式正確
+      const formattedBase64 = base64.trim().replace(/^data:image\/(png|jpeg|jpg);base64,/, '');
+
+      // 使用更安全的轉換方法
+      const response = await fetch(`data:image/png;base64,${formattedBase64}`);
+      const blob = await response.blob();
+      return blob;
     } catch (error) {
       console.error('Error converting base64 to blob:', error);
-      throw error;
+      throw new Error('Failed to convert image data');
     }
   };
 
@@ -1103,7 +1103,7 @@ const ContentArea: React.FC<ContentAreaProps> = ({
     if (typeof value === "string") {
       if (value.startsWith("data:image")) {
         // Convert Base64 string to Blob
-        const blob = base64ToBlob(value);
+        const blob = await base64ToBlob(value);
         formData.append(key, new File([blob], `${key}.png`, { type: blob.type }));
       } else if (value.startsWith("blob:")) {
         // Fetch Blob from Blob URL
@@ -1122,13 +1122,9 @@ const ContentArea: React.FC<ContentAreaProps> = ({
 
   // 修改 generateImages 函數，在成功生成圖片後將其添加到歷史記錄中
   const generateImages = async () => {
-    if (!canGenerate) {
-      return;
-    }
-
-    setIsGenerating(true);
-
     try {
+      setIsGenerating(true);
+
       const formData = new FormData();
 
       // Stage 1: 使用保存的縮圖
@@ -1145,7 +1141,7 @@ const ContentArea: React.FC<ContentAreaProps> = ({
             const blob = await fetch(stage2Photo).then(r => r.blob());
             formData.append("node_58", new File([blob], "node_58.png", { type: "image/png" }));
           } else {
-            const blob = base64ToBlob(stage2Photo);
+            const blob = await base64ToBlob(stage2Photo);
             formData.append("node_58", new File([blob], "node_58.png", { type: "image/png" }));
           }
         }
@@ -1188,7 +1184,7 @@ const ContentArea: React.FC<ContentAreaProps> = ({
             const blob = await fetch(stage3Photo).then(r => r.blob());
             formData.append("node_436", new File([blob], "node_436.png", { type: "image/png" }));
           } else {
-            const blob = base64ToBlob(stage3Photo);
+            const blob = await base64ToBlob(stage3Photo);
             formData.append("node_436", new File([blob], "node_436.png", { type: "image/png" }));
           }
         }
@@ -2839,7 +2835,7 @@ const ContentArea: React.FC<ContentAreaProps> = ({
               setThumbnailUrl(imgData);
 
               tempCanvas.remove();
-            }, 1000); 
+            }, 1000);
           }
 
           tempCanvas.remove();
@@ -3681,7 +3677,7 @@ const ContentArea: React.FC<ContentAreaProps> = ({
           </div>
 
           {/* 撤銷、重做、重置按鈕區域 */}
-          <div className="absolute bottom-36 right-8 flex items-center justify-center space-x-1.5">
+          <div className="absolute bottom-36 right-8 flex items-center justify-center space-x-1.5 z-50">
             {(currentStage === 'stage1' &&
               <button
                 onClick={clearActiveLayer}
@@ -3721,7 +3717,7 @@ const ContentArea: React.FC<ContentAreaProps> = ({
 
         {/* 底部工具欄 - 更新定位方式 */}
         <div
-          className="absolute bottom-0 left-0 right-0 h-[114px] bg-white p-3 border border-tint rounded-[20px] drop-shadow flex justify-between items-center mx-4"
+          className="absolute bottom-0 left-0 right-0 h-[114px] bg-white p-3 border border-tint rounded-[20px] drop-shadow flex justify-between items-center mx-4 z-50"
           style={{
             width: 'calc(100% - 32px)',
             margin: '0 16px 16px 16px',

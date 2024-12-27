@@ -9,10 +9,12 @@ const App: React.FC = () => {
   const [selectedProject, setSelectedProject] = useState<string>('Project 1');
   const [selectedPhotoSet, setSelectedPhotoSet] = useState<string>('Photo Set 1');
 
-  const toggleSidebar = () => {setSidebarVisible(!isSidebarVisible);
+  const toggleSidebar = () => {
+    setSidebarVisible(!isSidebarVisible);
     console.log('click1')
   }
-  const toggleSubSidebar = () => {setSubSidebarVisible(!isSubSidebarVisible);
+  const toggleSubSidebar = () => {
+    setSubSidebarVisible(!isSubSidebarVisible);
     console.log('click')
   }
 

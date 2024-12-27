@@ -33,7 +33,6 @@ type SubSidebarProps = {
   currentStage: string;
   handleFileUpload: (event: React.ChangeEvent<HTMLInputElement>) => void;
   uploadedFiles: any[];
-  handleImageFileUpload: (event: React.ChangeEvent<HTMLInputElement>) => void;
   uploadedImageFiles: any[];
   uploadedImage3Files: any[];
   onModelAdd: (url: string) => void;
@@ -376,6 +375,7 @@ const UploadIcon = () => (
 const defaultLocalModels = [
   { url: 'src/assets/model/model1.glb', file: null },
   { url: 'src/assets/model/model2.gltf', file: null },
+  { url: 'src/assets/model/model3.glb', file: null },
   // 如有更多模型可在此加入
 ];
 
@@ -461,7 +461,56 @@ const stage3CarouselData: CarouselRowData[] = [
   // ... stage3 styles 2~5 ...
 ];
 
-const SubSidebar: React.FC<SubSidebarProps> = ({ isVisible, toggleSubSidebar, currentStage, handleFileUpload, uploadedFiles, handleImageFileUpload, uploadedImageFiles, uploadedImage3Files, setUploadedImage3Files, setUploadedImageFiles, setSelectedImage, onModelAdd, onModelDelete }) => {
+// 在文件頂部添加 stage1 的 carousel data
+const stage1CarouselData: CarouselRowData[] = [
+  {
+    title: 'Chair',
+    images: [
+      // 這裡需要���加相應的模型預覽圖
+    ],
+  },
+  {
+    title: 'Table',
+    images: [
+      // 這裡需要添加相應的模型預覽圖
+    ],
+  },
+  {
+    title: 'Lamp',
+    images: [
+      // 這裡需要添加相應的模型預覽圖
+    ],
+  },
+  {
+    title: 'Sofa',
+    images: [
+      // 這裡需要添加相應的模型預覽圖
+    ],
+  },
+  {
+    title: 'Bed',
+    images: [
+      // 這裡需要添加相應的模型預覽圖
+    ],
+  },
+];
+
+// 在檔案頂部新增預設圖片資料
+const defaultStage2Images = [
+  { url: 'src/assets/stage2/image1.png', file: null },
+  { url: 'src/assets/stage2/image2.png', file: null },
+  { url: 'src/assets/stage2/image3.jpg', file: null },
+  // 可以繼續添加更多預設圖片
+];
+
+const defaultStage3Images = [
+  { url: 'src/assets/stage3/image1.jpeg', file: null },
+  { url: 'src/assets/stage3/image2.png', file: null },
+  { url: 'src/assets/stage3/image3.webp', file: null },
+  // 可以繼續添加更多預設圖片
+];
+
+const SubSidebar: React.FC<SubSidebarProps> = ({ isVisible, toggleSubSidebar, currentStage, handleFileUpload, uploadedFiles, uploadedImageFiles, uploadedImage3Files, setUploadedImageFiles, setUploadedImage3Files, setSelectedImage, onModelAdd, onModelDelete }) => {
   const [screenshotUrls, setScreenshotUrls] = useState<{ [key: string]: string }>({});
 
   const handleScreenshotTaken = useCallback((url: string, thumbnail: string) => {
@@ -485,6 +534,7 @@ const SubSidebar: React.FC<SubSidebarProps> = ({ isVisible, toggleSubSidebar, cu
   const [localModels, setLocalModels] = useState<{ url: string; file: File | null }[]>([
     { url: 'src/assets/model/model1.glb', file: null },
     { url: 'src/assets/model/model2.glb', file: null },
+    { url: 'src/assets/model/model3.glb', file: null },
     // 如有更多模型可在此加入
   ]);
 
@@ -508,8 +558,8 @@ const SubSidebar: React.FC<SubSidebarProps> = ({ isVisible, toggleSubSidebar, cu
     });
   };
 
-  const [stage2ActiveButton, setstage2ActiveButton] = useState<'recommend' | 'uploaded'>('recommend');
-  const [stage3ActiveButton, setstage3ActiveButton] = useState<'recommend' | 'uploaded'>('recommend');
+  const [stage2ActiveButton, setstage2ActiveButton] = useState<'recommend' | 'uploaded'>('uploaded');
+  const [stage3ActiveButton, setstage3ActiveButton] = useState<'recommend' | 'uploaded'>('uploaded');
 
   const [isDragging, setIsDragging] = useState(false);
   const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
@@ -524,7 +574,7 @@ const SubSidebar: React.FC<SubSidebarProps> = ({ isVisible, toggleSubSidebar, cu
       setUploadedImageFiles((prevImages) => [...prevImages, ...imageUrls]);
     } else {
       setUploadedImage3Files((prevImages) => [...prevImages, ...imageUrls]);
-    }      
+    }
   };
 
   const handleDragOver = useCallback((event: React.DragEvent<HTMLDivElement>) => {
@@ -536,9 +586,40 @@ const SubSidebar: React.FC<SubSidebarProps> = ({ isVisible, toggleSubSidebar, cu
     setIsDragging(false);
   }, []);
 
-  const handleImageClick = (url: string) => {
-    setSelectedImage(url); 
+  const handleImageClick = async (imageUrl: string) => {
+    try {
+      // 將圖片轉換為 blob，無論是本地圖片還是預設圖片
+      const response = await fetch(imageUrl);
+      const blob = await response.blob();
+      const objectUrl = URL.createObjectURL(blob);
+
+      // 更新選中的圖片
+      setSelectedImage(objectUrl);
+    } catch (error) {
+      console.error('Error processing image:', error);
+    }
   };
+
+  const handleImageFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || []);
+    const imageUrls = files.map(file => URL.createObjectURL(file));
+
+    if (currentStage === 'stage2') {
+      setUploadedImageFiles(prev => [...prev, ...imageUrls]);
+    } else if (currentStage === 'stage3') {
+      setUploadedImage3Files(prev => [...prev, ...imageUrls]);
+    }
+  };
+
+  const [stage1ActiveButton, setStage1ActiveButton] = useState<'recommend' | 'uploaded'>('uploaded');
+
+  // Add new states for stage 2 and 3 input text
+  const [stage2InputText, setStage2InputText] = useState<string>('');
+  const [stage3InputText, setStage3InputText] = useState<string>('');
+
+  // 在 SubSidebar 組件內新增 state
+  const [stage2LocalImages, setStage2LocalImages] = useState<{ url: string; file: File | null }[]>(defaultStage2Images);
+  const [stage3LocalImages, setStage3LocalImages] = useState<{ url: string; file: File | null }[]>(defaultStage3Images);
 
   return (
     <div
@@ -562,215 +643,366 @@ const SubSidebar: React.FC<SubSidebarProps> = ({ isVisible, toggleSubSidebar, cu
           {currentStage === 'stage1' && (
             <>
               <div className="py-4 px-4">
-                <span className="text-lg text-black Chillax-Semibold">Asset Library</span>
+                <span className="text-lg text-black Chillax-Semibold">Step1 - Position</span>
               </div>
 
               <div className="px-4 flex flex-col gap-3">
-                <div className="h-[114px] p-2.5 border border-[#E6E5FF] bg-[#F4F5F7] text-black25 rounded-[10px]">
-                  <textarea
-                    value={inputText}
-                    onChange={(e) => setInputText(e.target.value)}
-                    placeholder=" Describe your dream object"
-                    className="w-full bg-secondary border-none outline-none text-8D8D8F resize-none Chillax-Medium placeholder:text-[#C7C7C7]"
-                    rows={4}
-                  />
-                </div>
-
-                <button className="w-full h-11 rounded-[10px] flex justify-center items-center gap-3 bg-tint text-primary Chillax-Medium">
-                  <GenerateIcon />
-                  AI 3D Generate
-                </button>
-
-                <label className="w-full h-11 rounded-[10px] flex justify-center items-center gap-3 bg-primary text-secondary Chillax-Medium cursor-pointer">
-                  <UploadIcon />
-                  Upload Your Object
-                  <input
-                    id="upload-button"
-                    type="file"
-                    multiple
-                    accept=".gltf,.glb"
-                    onChange={handleFileUpload}
-                    className="hidden"
-                  />
-                </label>
-              </div>
-
-              <div className="p-4 grid grid-cols-3 gap-3">
-                {allModels.map((uploaded, index) => (
-                  <div
-                    key={index}
-                    className="relative w-full aspect-square border border-tint rounded-[14px] mb-4 group"
-                    draggable
-                    onDragStart={(e) => handleDragStart(e, uploaded.url)}
-                    onDoubleClick={() => handleDoubleClick(uploaded.url)}
+                <div className='w-full h-11 rounded-[14px] flex justify-between items-center bg-secondary border border-tint px-1'>
+                  <button
+                    className={`w-1/2 h-8 rounded-[9px] flex justify-center items-center gap-2 Chillax-Medium ${stage1ActiveButton === 'recommend' ? 'bg-primary text-tint' : 'text-black50'}`}
+                    onClick={() => setStage1ActiveButton('recommend')}
                   >
-                    {screenshotUrls[uploaded.url] ? (
-                      <img
-                        src={screenshotUrls[uploaded.url]}
-                        alt="Model preview"
-                        className="w-full h-full object-cover rounded-lg"
-                      />
-                    ) : (
-                      <Canvas
-                        className="rounded-lg"
-                        camera={{ position: [0, 2, 5], fov: 45 }}
-                        gl={{ preserveDrawingBuffer: true }}
-                      >
-                        <ambientLight intensity={0.5} />
-                        <directionalLight position={[10, 10, 10]} intensity={1} />
-                        <Suspense fallback={null}>
-                          <ModelScreenshot
-                            url={uploaded.url}
-                            onScreenshotTaken={(thumbnail) => handleScreenshotTaken(uploaded.url, thumbnail)}
-                          />
-                        </Suspense>
-                      </Canvas>
-                    )}
-
-                    {/* 刪除按鈕 - 呼叫 handleDeleteModel */}
-                    <button
-                      className="absolute top-2 right-2 w-6 h-6 rounded-full bg-[#E6E5FF] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDeleteModel(uploaded.url);
-                      }}
-                    >
-                      <svg
-                        width="10"
-                        height="10"
-                        viewBox="0 0 14 14"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                      >
-                        <path
-                          d="M1 1L13 13M1 13L13 1"
-                          stroke="#8885FF"
-                          strokeWidth="3"
-                          strokeLinecap="round"
-                        />
-                      </svg>
-                    </button>
-                  </div>
-                ))}
+                    Template
+                  </button>
+                  <button
+                    className={`w-1/2 h-8 rounded-[9px] flex justify-center items-center gap-2 Chillax-Medium ${stage1ActiveButton === 'uploaded' ? 'bg-primary text-tint' : 'text-black50'}`}
+                    onClick={() => setStage1ActiveButton('uploaded')}
+                  >
+                    Yours
+                  </button>
+                </div>
               </div>
+
+              {stage1ActiveButton === 'recommend' ? (
+                <CarouselRows carouselData={stage1CarouselData} />
+              ) : (
+                <>
+                  <div className="p-4 grid grid-cols-3 gap-3 flex-grow">
+                    {allModels.map((uploaded, index) => (
+                      <div
+                        key={index}
+                        className="relative w-full aspect-square border border-tint rounded-[14px] mb-4 group"
+                        draggable
+                        onDragStart={(e) => handleDragStart(e, uploaded.url)}
+                        onDoubleClick={() => handleDoubleClick(uploaded.url)}
+                      >
+                        {screenshotUrls[uploaded.url] ? (
+                          <img
+                            src={screenshotUrls[uploaded.url]}
+                            alt="Model preview"
+                            className="w-full h-full object-cover rounded-lg"
+                          />
+                        ) : (
+                          <Canvas
+                            className="rounded-lg"
+                            camera={{ position: [0, 2, 5], fov: 45 }}
+                            gl={{ preserveDrawingBuffer: true }}
+                          >
+                            <ambientLight intensity={0.5} />
+                            <directionalLight position={[10, 10, 10]} intensity={1} />
+                            <Suspense fallback={null}>
+                              <ModelScreenshot
+                                url={uploaded.url}
+                                onScreenshotTaken={(thumbnail) => handleScreenshotTaken(uploaded.url, thumbnail)}
+                              />
+                            </Suspense>
+                          </Canvas>
+                        )}
+
+                        <button
+                          className="absolute top-2 right-2 w-6 h-6 rounded-full bg-[#E6E5FF] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteModel(uploaded.url);
+                          }}
+                        >
+                          <svg
+                            width="10"
+                            height="10"
+                            viewBox="0 0 14 14"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <path
+                              d="M1 1L13 13M1 13L13 1"
+                              stroke="#8885FF"
+                              strokeWidth="3"
+                              strokeLinecap="round"
+                            />
+                          </svg>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="fixed bottom-0 w-[368px] px-4 pb-4 bg-white">
+                    <div className="flex flex-col gap-3">
+                      <button className="w-full h-11 rounded-[10px] flex justify-center items-center gap-3 bg-tint text-primary Chillax-Medium">
+                        <GenerateIcon />
+                        Dream with AI
+                      </button>
+
+                      <label className="w-full h-11 rounded-[10px] flex justify-center items-center gap-3 bg-primary text-secondary Chillax-Medium cursor-pointer">
+                        <UploadIcon />
+                        Upload Object
+                        <input
+                          id="upload-button"
+                          type="file"
+                          multiple
+                          accept=".gltf,.glb"
+                          onChange={handleFileUpload}
+                          className="hidden"
+                        />
+                      </label>
+                    </div>
+                  </div>
+                </>
+              )}
             </>
           )}
 
           {currentStage === 'stage2' && (
             <>
               <div className="py-4 px-4">
-                <span className="text-lg text-black Chillax-Semibold">Reference Image</span>
+                <span className="text-lg text-black Chillax-Semibold">Step2 - Background</span>
               </div>
 
-              <div className="px-4 flex flex-col gap-3 text-base">
+              <div className="px-4 flex flex-col gap-3">
                 <div className='w-full h-11 rounded-[14px] flex justify-between items-center bg-secondary border border-tint px-1'>
                   <button
-                    className={`w-1/2 h-8 rounded-[9px] flex justify-center items-center gap-2 Chillax-Medium ${stage2ActiveButton === 'recommend' ? 'bg-primary text-tint' : 'text-black50'
-                      }`}
+                    className={`w-1/2 h-8 rounded-[9px] flex justify-center items-center gap-2 Chillax-Medium ${stage2ActiveButton === 'recommend' ? 'bg-primary text-tint' : 'text-black50'}`}
                     onClick={() => setstage2ActiveButton('recommend')}
                   >
-                    Recommend
+                    Template
                   </button>
                   <button
-                    className={`w-1/2 h-8 rounded-[9px] flex justify-center items-center gap-2 Chillax-Medium ${stage2ActiveButton === 'uploaded' ? 'bg-primary text-tint' : 'text-black50'
-                      }`}
+                    className={`w-1/2 h-8 rounded-[9px] flex justify-center items-center gap-2 Chillax-Medium ${stage2ActiveButton === 'uploaded' ? 'bg-primary text-tint' : 'text-black50'}`}
                     onClick={() => setstage2ActiveButton('uploaded')}
                   >
-                    Uploaded
+                    Yours
                   </button>
                 </div>
-                <button
-                  className="w-full h-10 rounded-[14px] flex justify-start items-center gap-1 bg-secondary text-black50 Chillax-Medium border border-tint px-3"
-                >
-                  <SearchRoundedIcon />
-                  Search
-                </button>
               </div>
 
-              {stage2ActiveButton === 'recommend' ?
-                <CarouselRows carouselData={stage3CarouselData} />
-                :
-                <div
-                  className="p-4 w-full h-full"
-                  onDragOver={handleDragOver}
-                  onDragLeave={handleDragLeave}
-                  onDrop={handleDrop}
-                >
-                  {uploadedImageFiles.length > 0 ? (
-                    <div className="flex flex-wrap gap-4">
-                      {uploadedImageFiles.map((imgUrl, index) => (
+              {stage2ActiveButton === 'recommend' ? (
+                <CarouselRows carouselData={stage2CarouselData} />
+              ) : (
+                <>
+                  <div className="p-4 grid grid-cols-3 gap-3 flex-grow">
+                    {/* 顯示本地圖片 */}
+                    {stage2LocalImages.map((image, index) => (
+                      <div
+                        key={`local-${index}`}
+                        className="relative aspect-square border border-tint rounded-[14px] group overflow-hidden"
+                      >
                         <img
-                          key={index}
+                          src={image.url}
+                          alt={`Local ${index}`}
+                          className="w-full h-full object-cover"
+                          onClick={() => handleImageClick(image.url)}
+                        />
+                        <button
+                          className="absolute top-2 right-2 w-6 h-6 rounded-full bg-[#E6E5FF] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setStage2LocalImages(prev => prev.filter(img => img.url !== image.url));
+                          }}
+                        >
+                          <svg
+                            width="10"
+                            height="10"
+                            viewBox="0 0 14 14"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <path
+                              d="M1 1L13 13M1 13L13 1"
+                              stroke="#8885FF"
+                              strokeWidth="3"
+                              strokeLinecap="round"
+                            />
+                          </svg>
+                        </button>
+                      </div>
+                    ))}
+
+                    {/* 顯示上傳的圖片 */}
+                    {uploadedImageFiles.map((imgUrl, index) => (
+                      <div
+                        key={`uploaded-${index}`}
+                        className="relative aspect-square border border-tint rounded-[14px] group overflow-hidden"
+                      >
+                        <img
                           src={imgUrl}
                           alt={`Uploaded ${index}`}
-                          className="h-28 w-auto rounded-xl bg-[#F4F4F4]"
+                          className="w-full h-full object-cover"
                           onClick={() => handleImageClick(imgUrl)}
                         />
-                      ))}
+                        <button
+                          className="absolute top-2 right-2 w-6 h-6 rounded-full bg-[#E6E5FF] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setUploadedImageFiles(prev => prev.filter(url => url !== imgUrl));
+                          }}
+                        >
+                          <svg
+                            width="10"
+                            height="10"
+                            viewBox="0 0 14 14"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <path
+                              d="M1 1L13 13M1 13L13 1"
+                              stroke="#8885FF"
+                              strokeWidth="3"
+                              strokeLinecap="round"
+                            />
+                          </svg>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="fixed bottom-0 w-[368px] px-4 pb-4 bg-white">
+                    <div className="flex flex-col gap-3">
+                      <button className="w-full h-11 rounded-[10px] flex justify-center items-center gap-3 bg-tint text-primary Chillax-Medium">
+                        <GenerateIcon />
+                        Dream with AI
+                      </button>
+
+                      <label className="w-full h-11 rounded-[10px] flex justify-center items-center gap-3 bg-primary text-secondary Chillax-Medium cursor-pointer">
+                        <UploadIcon />
+                        Upload Image
+                        <input
+                          type="file"
+                          multiple
+                          accept="image/*"
+                          onChange={handleImageFileUpload}
+                          className="hidden"
+                        />
+                      </label>
                     </div>
-                  ) : (
-                    <></>
-                  )}
-                </div>
-              }
+                  </div>
+                </>
+              )}
             </>
           )}
           {currentStage === 'stage3' && (
             <>
               <div className="py-4 px-4">
-                <span className="text-lg text-black Chillax-Semibold">Reference Image</span>
+                <span className="text-lg text-black Chillax-Semibold">Step3 - Lighting</span>
               </div>
 
-              <div className="px-4 flex flex-col gap-3 text-base">
+              <div className="px-4 flex flex-col gap-3">
                 <div className='w-full h-11 rounded-[14px] flex justify-between items-center bg-secondary border border-tint px-1'>
                   <button
-                    className={`w-1/2 h-8 rounded-[9px] flex justify-center items-center gap-2 Chillax-Medium ${stage3ActiveButton === 'recommend' ? 'bg-primary text-tint' : 'text-black50'
-                      }`}
+                    className={`w-1/2 h-8 rounded-[9px] flex justify-center items-center gap-2 Chillax-Medium ${stage3ActiveButton === 'recommend' ? 'bg-primary text-tint' : 'text-black50'}`}
                     onClick={() => setstage3ActiveButton('recommend')}
                   >
-                    Recommend
+                    Template
                   </button>
                   <button
-                    className={`w-1/2 h-8 rounded-[9px] flex justify-center items-center gap-2 Chillax-Medium ${stage3ActiveButton === 'uploaded' ? 'bg-primary text-tint' : 'text-black50'
-                      }`}
+                    className={`w-1/2 h-8 rounded-[9px] flex justify-center items-center gap-2 Chillax-Medium ${stage3ActiveButton === 'uploaded' ? 'bg-primary text-tint' : 'text-black50'}`}
                     onClick={() => setstage3ActiveButton('uploaded')}
                   >
-                    Uploaded
+                    Yours
                   </button>
                 </div>
-                <button
-                  className="w-full h-10 rounded-[14px] flex justify-start items-center gap-1 bg-secondary text-black50 Chillax-Medium border border-tint px-3"
-                >
-                  <SearchRoundedIcon />
-                  Search
-                </button>
               </div>
-              {stage3ActiveButton === 'recommend' ? 
+
+              {stage3ActiveButton === 'recommend' ? (
                 <CarouselRows carouselData={stage3CarouselData} />
-                :
-                <div
-                  className="p-4 w-full h-full"
-                  onDragOver={handleDragOver}
-                  onDragLeave={handleDragLeave}
-                  onDrop={handleDrop}
-                >
-                  {uploadedImage3Files.length > 0 ? (
-                    <div className="flex flex-wrap gap-4">
-                      {uploadedImage3Files.map((imgUrl, index) => (
+              ) : (
+                <>
+                  <div className="p-4 grid grid-cols-3 gap-3 flex-grow">
+                    {/* 顯示本地圖片 */}
+                    {stage3LocalImages.map((image, index) => (
+                      <div
+                        key={`local-${index}`}
+                        className="relative aspect-square border border-tint rounded-[14px] group overflow-hidden"
+                      >
                         <img
-                          key={index}
+                          src={image.url}
+                          alt={`Local ${index}`}
+                          className="w-full h-full object-cover"
+                          onClick={() => handleImageClick(image.url)}
+                        />
+                        <button
+                          className="absolute top-2 right-2 w-6 h-6 rounded-full bg-[#E6E5FF] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setStage3LocalImages(prev => prev.filter(img => img.url !== image.url));
+                          }}
+                        >
+                          <svg
+                            width="10"
+                            height="10"
+                            viewBox="0 0 14 14"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <path
+                              d="M1 1L13 13M1 13L13 1"
+                              stroke="#8885FF"
+                              strokeWidth="3"
+                              strokeLinecap="round"
+                            />
+                          </svg>
+                        </button>
+                      </div>
+                    ))}
+
+                    {/* 顯示上傳的圖片 */}
+                    {uploadedImage3Files.map((imgUrl, index) => (
+                      <div
+                        key={`uploaded-${index}`}
+                        className="relative aspect-square border border-tint rounded-[14px] group overflow-hidden"
+                      >
+                        <img
                           src={imgUrl}
                           alt={`Uploaded ${index}`}
-                          className="h-28 w-auto rounded-xl bg-[#F4F4F4]"
+                          className="w-full h-full object-cover"
                           onClick={() => handleImageClick(imgUrl)}
                         />
-                      ))}
+                        <button
+                          className="absolute top-2 right-2 w-6 h-6 rounded-full bg-[#E6E5FF] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setUploadedImage3Files(prev => prev.filter(url => url !== imgUrl));
+                          }}
+                        >
+                          <svg
+                            width="10"
+                            height="10"
+                            viewBox="0 0 14 14"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <path
+                              d="M1 1L13 13M1 13L13 1"
+                              stroke="#8885FF"
+                              strokeWidth="3"
+                              strokeLinecap="round"
+                            />
+                          </svg>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="fixed bottom-0 w-[368px] px-4 pb-4 bg-white">
+                    <div className="flex flex-col gap-3">
+                      <button className="w-full h-11 rounded-[10px] flex justify-center items-center gap-3 bg-tint text-primary Chillax-Medium">
+                        <GenerateIcon />
+                        Dream with AI
+                      </button>
+
+                      <label className="w-full h-11 rounded-[10px] flex justify-center items-center gap-3 bg-primary text-secondary Chillax-Medium cursor-pointer">
+                        <UploadIcon />
+                        Upload Image
+                        <input
+                          type="file"
+                          multiple
+                          accept="image/*"
+                          onChange={handleImageFileUpload}
+                          className="hidden"
+                        />
+                      </label>
                     </div>
-                  ) : (
-                    <></>
-                  )}
-                </div> 
-              }              
+                  </div>
+                </>
+              )}
             </>
           )}
         </div>
